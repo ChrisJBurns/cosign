@@ -12,39 +12,59 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cosign
+package errors
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var (
 	// ErrNoMatchingSignatures is the error returned when there are no matching
 	// signatures during verification.
-	ErrNoMatchingSignatures = &VerificationError{"no matching signatures"}
+	ErrNoMatchingSignatures = &CosignError{"no matching signatures", UnmatchingSignature}
 
 	// ErrNoMatchingAttestations is the error returned when there are no
 	// matching attestations during verification.
-	ErrNoMatchingAttestations = &VerificationError{"no matching attestations"}
+	// TODO: don't forget to implement exit code for no matching attestation
+	ErrNoMatchingAttestations = &CosignError{"no matching attestations", 1}
 )
 
 // VerificationError is the type of Go error that is used by cosign to surface
 // errors actually related to verification (vs. transient, misconfiguration,
 // transport, or authentication related issues).
-type VerificationError struct {
-	message string
+type CosignError struct {
+	Message string
+	Code    int
 }
 
 // NewVerificationError constructs a new VerificationError in a manner similar
 // to fmt.Errorf
 func NewVerificationError(msg string, args ...interface{}) error {
-	return &VerificationError{
-		message: fmt.Sprintf(msg, args...),
+	return &CosignError{
+		Message: fmt.Sprintf(msg, args...),
+		Code:    12,
 	}
 }
 
+func NewError(cosignError CosignError) error {
+	return &CosignError{
+		Message: cosignError.Message,
+		Code:    cosignError.Code,
+	}
+	// return &VerificationError{
+	// 	message: fmt.Sprintf(msg, args...),
+	// 	code:    12,
+	// }
+}
+
 // Assert that we implement error at build time.
-var _ error = (*VerificationError)(nil)
+var _ error = (*CosignError)(nil)
 
 // Error implements error
-func (ve *VerificationError) Error() string {
-	return ve.message
+func (ve *CosignError) Error() string {
+	return ve.Message
+}
+
+func (e *CosignError) ExitCode() int {
+	return e.Code
 }

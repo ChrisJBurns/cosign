@@ -21,8 +21,8 @@ import (
 
 	"cuelang.org/go/cue/cuecontext"
 	"github.com/sigstore/cosign/v2/internal/ui"
-	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"github.com/sigstore/cosign/v2/pkg/cosign/rego"
+	cosignErrors "github.com/sigstore/cosign/v2/pkg/error"
 )
 
 // EvaluatePolicyAgainstJson is used to run a policy engine against JSON bytes.
@@ -37,12 +37,12 @@ func EvaluatePolicyAgainstJSON(ctx context.Context, name, policyType string, pol
 	case "cue":
 		cueValidationErr := evaluateCue(ctx, jsonBytes, policyBody)
 		if cueValidationErr != nil {
-			return nil, cosign.NewVerificationError("failed evaluating cue policy for %s: %v", name, cueValidationErr)
+			return nil, cosignErrors.NewVerificationError("failed evaluating cue policy for %s: %v", name, cueValidationErr)
 		}
 	case "rego":
 		regoValidationWarn, regoValidationErr := evaluateRego(ctx, jsonBytes, policyBody)
 		if regoValidationErr != nil {
-			return regoValidationWarn, cosign.NewVerificationError("failed evaluating rego policy for type %s: %s", name, regoValidationErr)
+			return regoValidationWarn, cosignErrors.NewVerificationError("failed evaluating rego policy for type %s: %s", name, regoValidationErr)
 		}
 		// It is possible to return warning messages when the policy is compliant
 		return regoValidationWarn, regoValidationErr

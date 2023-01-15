@@ -46,6 +46,7 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 
 	ssldsse "github.com/secure-systems-lab/go-securesystemslib/dsse"
+	cosignErrors "github.com/sigstore/cosign/v2/pkg/error"
 	"github.com/sigstore/cosign/v2/pkg/oci"
 	"github.com/sigstore/cosign/v2/pkg/oci/layout"
 	ociremote "github.com/sigstore/cosign/v2/pkg/oci/remote"
@@ -165,7 +166,7 @@ func verifyOCIAttestation(_ context.Context, verifier signature.Verifier, att pa
 	}
 
 	if env.PayloadType != types.IntotoPayloadType {
-		return NewVerificationError("invalid payloadType %s on envelope. Expected %s", env.PayloadType, types.IntotoPayloadType)
+		return cosignErrors.NewVerificationError("invalid payloadType %s on envelope. Expected %s", env.PayloadType, types.IntotoPayloadType)
 	}
 	dssev, err := ssldsse.NewEnvelopeVerifier(&dsse.VerifierAdapter{SignatureVerifier: verifier})
 	if err != nil {
@@ -233,7 +234,8 @@ func ValidateAndUnpackCert(cert *x509.Certificate, co *CheckOpts) (signature.Ver
 		return nil, err
 	}
 	if !contains && len(co.SCT) == 0 {
-		return nil, &VerificationError{"certificate does not include required embedded SCT and no detached SCT was set"}
+		// implement proper exit code for this and write tests to verify it works
+		return nil, &cosignErrors.CosignError{"certificate does not include required embedded SCT and no detached SCT was set", 1}
 	}
 	// handle if chains has more than one chain - grab first and print message
 	if len(chains) > 1 {
@@ -326,9 +328,10 @@ func CheckCertificatePolicy(cert *x509.Certificate, co *CheckOpts) error {
 				return nil
 			}
 		}
-		return &VerificationError{
+		// implement proper exit code for this and write tests to verify it works
+		return &cosignErrors.CosignError{
 			fmt.Sprintf("none of the expected identities matched what was in the certificate, got subjects [%s] with issuer %s",
-				strings.Join(sans, ", "), oidcIssuer)}
+				strings.Join(sans, ", "), oidcIssuer), 1}
 	}
 	return nil
 }
@@ -336,31 +339,36 @@ func CheckCertificatePolicy(cert *x509.Certificate, co *CheckOpts) error {
 func validateCertExtensions(ce CertExtensions, co *CheckOpts) error {
 	if co.CertGithubWorkflowTrigger != "" {
 		if ce.GetCertExtensionGithubWorkflowTrigger() != co.CertGithubWorkflowTrigger {
-			return &VerificationError{"expected GitHub Workflow Trigger not found in certificate"}
+			// implement proper exit code for this and write tests to verify it works
+			return &cosignErrors.CosignError{"expected GitHub Workflow Trigger not found in certificate", 1}
 		}
 	}
 
 	if co.CertGithubWorkflowSha != "" {
 		if ce.GetExtensionGithubWorkflowSha() != co.CertGithubWorkflowSha {
-			return &VerificationError{"expected GitHub Workflow SHA not found in certificate"}
+			// implement proper exit code for this and write tests to verify it works
+			return &cosignErrors.CosignError{"expected GitHub Workflow SHA not found in certificate", 1}
 		}
 	}
 
 	if co.CertGithubWorkflowName != "" {
 		if ce.GetCertExtensionGithubWorkflowName() != co.CertGithubWorkflowName {
-			return &VerificationError{"expected GitHub Workflow Name not found in certificate"}
+			// implement proper exit code for this and write tests to verify it works
+			return &cosignErrors.CosignError{"expected GitHub Workflow Name not found in certificate", 1}
 		}
 	}
 
 	if co.CertGithubWorkflowRepository != "" {
 		if ce.GetCertExtensionGithubWorkflowRepository() != co.CertGithubWorkflowRepository {
-			return &VerificationError{"expected GitHub Workflow Repository not found in certificate"}
+			// implement proper exit code for this and write tests to verify it works
+			return &cosignErrors.CosignError{"expected GitHub Workflow Repository not found in certificate", 1}
 		}
 	}
 
 	if co.CertGithubWorkflowRef != "" {
 		if ce.GetCertExtensionGithubWorkflowRef() != co.CertGithubWorkflowRef {
-			return &VerificationError{"expected GitHub Workflow Ref not found in certificate"}
+			// implement proper exit code for this and write tests to verify it works
+			return &cosignErrors.CosignError{"expected GitHub Workflow Ref not found in certificate", 1}
 		}
 	}
 	return nil
@@ -569,7 +577,8 @@ func verifySignatures(ctx context.Context, sigs oci.Signatures, h v1.Hash, co *C
 		checkedSignatures = append(checkedSignatures, sig)
 	}
 	if len(checkedSignatures) == 0 {
-		return nil, false, fmt.Errorf("%w:\n%s", ErrNoMatchingSignatures, strings.Join(validationErrs, "\n "))
+		return nil, false, cosignErrors.NewError(*cosignErrors.ErrNoMatchingSignatures)
+		// return nil, false, fmt.Errorf("%w:\n%s", ErrNoMatchingSignatures, strings.Join(validationErrs, "\n "))
 	}
 	return checkedSignatures, bundleVerified, nil
 }
@@ -643,7 +652,7 @@ func verifyInternal(ctx context.Context, sig oci.Signature, h v1.Hash,
 			return false, err
 		}
 		if cert == nil {
-			return false, &VerificationError{"no certificate found on signature"}
+			return false, &cosignErrors.CosignError{"no certificate found on signature", 1}
 		}
 		// Create a certificate pool for intermediate CA certificates, excluding the root
 		chain, err := sig.Chain()
@@ -710,7 +719,8 @@ func verifyInternal(ctx context.Context, sig oci.Signature, h v1.Hash,
 			if err := CheckExpiry(cert, time.Now()); err != nil {
 				// If certificate is expired and not signed timestamp was provided then error the following message. Otherwise throw an expiration error.
 				if co.IgnoreTlog && acceptableRFC3161Time == nil {
-					return false, &VerificationError{"expected a signed timestamp to verify an expired certificate"}
+					// implement proper exit code for this and write tests to verify it works
+					return false, &cosignErrors.CosignError{"expected a signed timestamp to verify an expired certificate", 1}
 				}
 				return false, fmt.Errorf("checking expiry on certificate with bundle: %w", err)
 			}
@@ -893,7 +903,7 @@ func verifyImageAttestations(ctx context.Context, atts oci.Signatures, h v1.Hash
 		checkedAttestations = append(checkedAttestations, att)
 	}
 	if len(checkedAttestations) == 0 {
-		return nil, false, fmt.Errorf("%w:\n%s", ErrNoMatchingAttestations, strings.Join(validationErrs, "\n "))
+		return nil, false, fmt.Errorf("%w:\n%s", cosignErrors.ErrNoMatchingAttestations, strings.Join(validationErrs, "\n "))
 	}
 	return checkedAttestations, bundleVerified, nil
 }
@@ -904,11 +914,11 @@ func CheckExpiry(cert *x509.Certificate, it time.Time) error {
 		return t.Format(time.RFC3339)
 	}
 	if cert.NotAfter.Before(it) {
-		return NewVerificationError("certificate expired before signatures were entered in log: %s is before %s",
+		return cosignErrors.NewVerificationError("certificate expired before signatures were entered in log: %s is before %s",
 			ft(cert.NotAfter), ft(it))
 	}
 	if cert.NotBefore.After(it) {
-		return NewVerificationError("certificate was issued after signatures were entered in log: %s is after %s",
+		return cosignErrors.NewVerificationError("certificate was issued after signatures were entered in log: %s is after %s",
 			ft(cert.NotAfter), ft(it))
 	}
 	return nil
@@ -954,7 +964,8 @@ func VerifyBundle(sig oci.Signature, co *CheckOpts) (bool, error) {
 
 	pubKey, ok := co.RekorPubKeys.Keys[bundle.Payload.LogID]
 	if !ok {
-		return false, &VerificationError{"verifying bundle: rekor log public key not found for payload"}
+		// implement proper exit code for this and write tests to verify it works
+		return false, &cosignErrors.CosignError{"verifying bundle: rekor log public key not found for payload", 1}
 	}
 	err = VerifySET(bundle.Payload, bundle.SignedEntryTimestamp, pubKey.PubKey.(*ecdsa.PublicKey))
 	if err != nil {
@@ -1044,7 +1055,8 @@ func compareSigs(bundleBody string, sig oci.Signature) error {
 		return nil
 	}
 	if bundleSignature != actualSig {
-		return &VerificationError{"signature in bundle does not match signature being verified"}
+		// implement proper exit code for this and write tests to verify it works
+		return &cosignErrors.CosignError{"signature in bundle does not match signature being verified", 1}
 	}
 	return nil
 }
@@ -1247,7 +1259,8 @@ func VerifySET(bundlePayload cbundle.RekorPayload, signature []byte, pub *ecdsa.
 	// verify the SET against the public key
 	hash := sha256.Sum256(canonicalized)
 	if !ecdsa.VerifyASN1(pub, hash[:], signature) {
-		return &VerificationError{"unable to verify SET"}
+		// implement proper exit code for this and write tests to verify it works
+		return &cosignErrors.CosignError{"unable to verify SET", 1}
 	}
 	return nil
 }
