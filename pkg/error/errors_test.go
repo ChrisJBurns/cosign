@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cosign
+package errors
 
 import (
 	"errors"
@@ -28,9 +28,9 @@ func TestErrors(t *testing.T) {
 		fmt.Errorf("wrapped errors: %w", ErrNoMatchingSignatures),
 	} {
 		t.Run(want.Error(), func(t *testing.T) {
-			verr := &VerificationError{}
+			verr := &CosignError{}
 			if !errors.As(want, &verr) {
-				t.Errorf("%v is not a %T", want, &VerificationError{})
+				t.Errorf("%v is not a %T", want, &CosignError{})
 			}
 
 			// Check that Is sees it as the same error through multiple

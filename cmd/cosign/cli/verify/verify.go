@@ -34,6 +34,7 @@ import (
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/options"
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/rekor"
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/sign"
+	cosignErrors "github.com/sigstore/cosign/v2/cmd/cosign/error"
 	"github.com/sigstore/cosign/v2/internal/pkg/cosign/tsa"
 	"github.com/sigstore/cosign/v2/pkg/blob"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
@@ -278,6 +279,11 @@ func (c *VerifyCommand) Exec(ctx context.Context, images []string) (err error) {
 
 			verified, bundleVerified, err := cosign.VerifyImageSignatures(ctx, ref, co)
 			if err != nil {
+				// t := err
+				return &cosignErrors.CosignError{
+					Message: err.Error(),
+					Code:    cosignErrors.err.ExitCode(),
+				}
 				return err
 			}
 

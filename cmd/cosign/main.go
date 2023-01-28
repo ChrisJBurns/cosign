@@ -23,6 +23,7 @@ import (
 
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli"
 	"github.com/sigstore/cosign/v2/internal/ui"
+	cosignErrors "github.com/sigstore/cosign/v2/pkg/error"
 
 	// Register the provider-specific plugins
 	_ "github.com/sigstore/sigstore/pkg/signature/kms/aws"
@@ -60,6 +61,14 @@ func main() {
 	}
 
 	if err := cli.New().Execute(); err != nil {
-		log.Fatalf("error during command execution: %v", err)
+		switch t := err.(type) {
+		case *cosignErrors.CosignError:
+			log.Printf("error during command execution: %v", err)
+			os.Exit(t.ExitCode())
+		default:
+			// we don't call os.Exit as Fatalf does both PrintF and os.Exit(1)
+			log.Fatalf("error during command execution: %v", err)
+		}
+
 	}
 }

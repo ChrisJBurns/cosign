@@ -20,6 +20,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"runtime"
 
@@ -73,6 +74,7 @@ func FetchSignaturesForReference(ctx context.Context, ref name.Reference, opts .
 	}
 	l, err := sigs.Get()
 	if err != nil {
+		log.Println("hey")
 		return nil, fmt.Errorf("fetching signatures: %w", err)
 	}
 	if len(l) == 0 {

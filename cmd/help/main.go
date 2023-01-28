@@ -19,6 +19,7 @@ import (
 	"os"
 
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli"
+	exitCode "github.com/sigstore/cosign/v2/pkg/error"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )
@@ -31,6 +32,7 @@ func main() {
 		SilenceUsage: true,
 		Args:         cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
+			exitCode.GenerateExitCodeDocs()
 			return doc.GenMarkdownTree(cli.New(), dir)
 		},
 	}
