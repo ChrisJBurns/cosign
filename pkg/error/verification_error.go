@@ -18,6 +18,17 @@ import (
 	"fmt"
 )
 
+var (
+	// ErrNoMatchingSignatures is the error returned when there are no matching
+	// signatures during verification.
+	ErrNoMatchingSignatures = &CosignError{"no matching signatures", UnmatchingSignature}
+
+	// ErrNoMatchingAttestations is the error returned when there are no
+	// matching attestations during verification.
+	// TODO: don't forget to implement exit code for no matching attestation
+	ErrNoMatchingAttestations = &CosignError{"no matching attestations", 1}
+)
+
 // CosignError is the type of Go error that is used by cosign to surface
 // errors actually related to verification (vs. transient, misconfiguration,
 // transport, or authentication related issues).
@@ -43,8 +54,19 @@ func NewVerificationError(errorType interface{}, msg string, args ...interface{}
 	}
 }
 
+func NewError(cosignError CosignError) error {
+	return &CosignError{
+		Message: cosignError.Message,
+		Code:    cosignError.Code,
+	}
+	// return &VerificationError{
+	// 	message: fmt.Sprintf(msg, args...),
+	// 	code:    12,
+	// }
+}
+
 // Assert that we implement error at build time.
-var _ error = (*VerificationError)(nil)
+var _ error = (*CosignError)(nil)
 
 // Error implements error
 func (ve *VerificationError) Error() string {
