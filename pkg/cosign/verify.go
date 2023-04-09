@@ -600,7 +600,7 @@ func verifySignatures(ctx context.Context, sigs oci.Signatures, h v1.Hash, co *C
 	}
 	if len(checkedSignatures) == 0 {
 		return nil, false, &VerificationError{
-			message: fmt.Sprintf("%s:\n%s", ErrNoMatchingSignatures.Error(), strings.Join(validationErrs, "\n ")),
+			message: fmt.Sprintf("%v:\n%s", ErrNoMatchingSignatures.Error(), strings.Join(validationErrs, "\n ")),
 			err:     ErrNoMatchingSignatures,
 		}
 	}
@@ -934,7 +934,10 @@ func verifyImageAttestations(ctx context.Context, atts oci.Signatures, h v1.Hash
 		checkedAttestations = append(checkedAttestations, att)
 	}
 	if len(checkedAttestations) == 0 {
-		return nil, false, NewVerificationErrorWrapped(ErrNoMatchingAttestations, fmt.Sprintf("%s:\n%s", ErrNoMatchingAttestations.Error(), strings.Join(validationErrs, "\n ")))
+		return nil, false, NewVerificationErrorWrapped(
+			ErrNoMatchingAttestations,
+			fmt.Sprintf("%s:\n%s", ErrNoMatchingAttestations.Error(), strings.Join(validationErrs, "\n ")),
+		)
 	}
 	return checkedAttestations, bundleVerified, nil
 }

@@ -42,7 +42,8 @@ func NewVerificationError(msg string, args ...interface{}) error {
 	}
 }
 
-// this is temporary for now whilst we build the exit codes for the different scenarios
+// this is temporary for now whilst we add the exit codes for the scenarios from where
+// this function is used.
 func NewVerificationErrorJustMessage(msg string) error {
 	return &VerificationError{
 		message: msg,
