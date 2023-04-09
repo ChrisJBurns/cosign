@@ -21,13 +21,13 @@ import (
 
 // exitCodeLookup contains a map of errorTypes and their associated exitCodes.
 var exitCodeLookup = map[string]int{
-	verificationError.ErrNoMatchingSignaturesType: NoMatchingSignature,
-	verificationError.ErrImageTagNotFoundType:     NonExistentTag,
-	verificationError.ErrNoSignaturesFoundType:    ImageWithoutSignature,
+	verificationError.ErrNoMatchingSignatures.Error(): NoMatchingSignature,
+	verificationError.ErrImageTagNotFound.Error():     NonExistentTag,
+	verificationError.ErrNoSignaturesFound.Error():    ImageWithoutSignature,
 }
 
-func LookupExitCodeForErrorType(errorType string) int {
-	exitCode := exitCodeLookup[errorType]
+func LookupExitCodeForError(err string) int {
+	exitCode := exitCodeLookup[err]
 
 	// if there is no entry in the lookup map for the passed errorType,
 	// then by default, it will return `0`. however, as `0` as an exitCode

@@ -31,8 +31,8 @@ func WrapError(err error) error {
 	var verificationError *verificationError.VerificationError
 	if errors.As(err, &verificationError) {
 		return &CosignError{
-			Message: verificationError.Error(),
-			Code:    LookupExitCodeForErrorType(verificationError.ErrorType()),
+			Message: verificationError.Message(),
+			Code:    LookupExitCodeForError(verificationError.Error()),
 		}
 	}
 

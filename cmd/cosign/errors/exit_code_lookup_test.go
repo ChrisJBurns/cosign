@@ -20,7 +20,7 @@ import (
 )
 
 func TestDefaultExitCodeReturnIfErrorTypeDoesNotExist(t *testing.T) {
-	exitCode := LookupExitCodeForErrorType("I do not exist as an error type")
+	exitCode := LookupExitCodeForError("I do not exist as an error type")
 	if exitCode != 1 {
 		t.Fatalf("default exit code not returned when an error type doesn't exist. default should be 1")
 	}

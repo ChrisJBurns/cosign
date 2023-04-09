@@ -14,32 +14,24 @@
 
 package cosign
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
-	// NoMatchingAttestations
-	ErrNoMatchingAttestationsMessage = "no matching attestations"
-	ErrNoMatchingAttestationsType    = "NoMatchingAttestations"
-
-	// NoMatchingSignatures
-	ErrNoMatchingSignaturesType    = "NoMatchingSignatures"
-	ErrNoMatchingSignaturesMessage = "no matching signatures"
-
-	// NonExistingTagType
-	ErrImageTagNotFoundType    = "ImageTagNotFound"
-	ErrImageTagNotFoundMessage = "image tag not found"
-
-	// NoSignaturesFound
-	ErrNoSignaturesFoundType    = "NoSignaturesFound"
-	ErrNoSignaturesFoundMessage = "no signatures found for image"
+	ErrNoMatchingAttestations = errors.New("no matching attestations")
+	ErrNoMatchingSignatures   = errors.New("no matching signatures")
+	ErrImageTagNotFound       = errors.New("image tag not found")
+	ErrNoSignaturesFound      = errors.New("no signatures found for image")
 )
 
 // VerificationError is the type of Go error that is used by cosign to surface
 // errors actually related to verification (vs. transient, misconfiguration,
 // transport, or authentication related issues).
 type VerificationError struct {
-	errorType string
-	message   string
+	message string
+	err     error
 }
 
 // NewVerificationError constructs a new VerificationError in a manner similar
@@ -50,19 +42,35 @@ func NewVerificationError(msg string, args ...interface{}) error {
 	}
 }
 
+// this is temporary for now whilst we build the exit codes for the different scenarios
+func NewVerificationErrorJustMessage(msg string) error {
+	return &VerificationError{
+		message: msg,
+		err:     errors.New(msg),
+	}
+}
+
+func NewVerificationErrorWrapped(err error, msg string) error {
+	return &VerificationError{
+		message: msg,
+		err:     err,
+	}
+}
+
 // Assert that we implement error at build time.
 var _ error = (*VerificationError)(nil)
 
 // Error implements error
-func (ve *VerificationError) Error() string {
+func (ve *VerificationError) Message() string {
 	return ve.message
 }
 
 // Error implements error
-func (ve *VerificationError) ErrorType() string {
-	return ve.errorType
+func (ve *VerificationError) Error() string {
+	if ve.err != nil {
+		return ve.err.Error()
+	}
+	return ve.message
 }
 
-func (ve *VerificationError) SetErrorType(errorType string) {
-	ve.errorType = errorType
-}
+func (e *VerificationError) Unwrap() error { return e.err }

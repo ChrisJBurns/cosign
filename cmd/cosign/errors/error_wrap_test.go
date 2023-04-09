@@ -23,8 +23,10 @@ import (
 )
 
 func TestWrapWithVerificationError(t *testing.T) {
-	ve := &verificationError.VerificationError{}
-	ve.SetErrorType(verificationError.ErrNoMatchingSignaturesType)
+	ve := verificationError.NewVerificationErrorWrapped(
+		verificationError.ErrNoMatchingSignatures,
+		verificationError.ErrNoMatchingSignatures.Error(),
+	)
 	err := WrapError(ve)
 
 	var cosignError *CosignError
