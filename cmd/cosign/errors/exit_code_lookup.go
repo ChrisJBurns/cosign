@@ -16,25 +16,28 @@
 package errors
 
 import (
-	verificationError "github.com/sigstore/cosign/v2/pkg/cosign"
+	"errors"
+
+	cosignError "github.com/sigstore/cosign/v2/pkg/cosign"
 )
 
-// exitCodeLookup contains a map of errorTypes and their associated exitCodes.
-var exitCodeLookup = map[string]int{
-	verificationError.ErrNoMatchingSignatures.Error(): NoMatchingSignature,
-	verificationError.ErrImageTagNotFound.Error():     NonExistentTag,
-	verificationError.ErrNoSignaturesFound.Error():    ImageWithoutSignature,
-}
-
-func LookupExitCodeForError(err string) int {
-	exitCode := exitCodeLookup[err]
-
-	// if there is no entry in the lookup map for the passed errorType,
-	// then by default, it will return `0`. however, as `0` as an exitCode
-	// for success, we want to return `1` instead until there is a valid
-	// exit code entry in the map for the passed errorType.
-	if exitCode == 0 {
-		return 1
+func LookupExitCodeForError(err interface{ error }) int {
+	var errNoMatchingSignatures *cosignError.ErrNoMatchingSignatures
+	if errors.As(err, &errNoMatchingSignatures) {
+		return NoMatchingSignature
 	}
-	return exitCode
+
+	var errImageTagNotFound *cosignError.ErrImageTagNotFound
+	if errors.As(err, &errImageTagNotFound) {
+		return NonExistentTag
+	}
+
+	var errNoSignaturesFound *cosignError.ErrNoSignaturesFound
+	if errors.As(err, &errNoSignaturesFound) {
+		return ImageWithoutSignature
+	}
+
+	// we want to return exit code = `1` at this point because there is
+	// no valid exit code found for the error type passed.
+	return 1
 }

@@ -14,64 +14,48 @@
 
 package cosign
 
-import (
-	"errors"
-	"fmt"
-)
-
-var (
-	ErrNoMatchingAttestations = errors.New("no matching attestations")
-	ErrNoMatchingSignatures   = errors.New("no matching signatures")
-	ErrImageTagNotFound       = errors.New("image tag not found")
-	ErrNoSignaturesFound      = errors.New("no signatures found for image")
-)
-
-// VerificationError is the type of Go error that is used by cosign to surface
-// errors actually related to verification (vs. transient, misconfiguration,
-// transport, or authentication related issues).
-type VerificationError struct {
-	message string
-	err     error
+// VerificationFailure is temporary until the error types for the case
+// where this has been thrown has been defined.
+type VerificationFailure struct {
+	err error
 }
 
-// NewVerificationError constructs a new VerificationError in a manner similar
-// to fmt.Errorf
-func NewVerificationError(msg string, args ...interface{}) error {
-	return &VerificationError{
-		message: fmt.Sprintf(msg, args...),
-	}
+func (e *VerificationFailure) Error() string {
+	return e.err.Error()
 }
 
-// this is temporary for now whilst we add the exit codes for the scenarios from where
-// this function is used.
-func NewVerificationErrorJustMessage(msg string) error {
-	return &VerificationError{
-		message: msg,
-		err:     errors.New(msg),
-	}
+type ErrNoMatchingSignatures struct {
+	err error
 }
 
-func NewVerificationErrorWrapped(err error, msg string) error {
-	return &VerificationError{
-		message: msg,
-		err:     err,
-	}
+func (e *ErrNoMatchingSignatures) Error() string {
+	return e.err.Error()
 }
 
-// Assert that we implement error at build time.
-var _ error = (*VerificationError)(nil)
-
-// Error implements error
-func (ve *VerificationError) Message() string {
-	return ve.message
+type ErrImageTagNotFound struct {
+	err error
 }
 
-// Error implements error
-func (ve *VerificationError) Error() string {
-	if ve.err != nil {
-		return ve.err.Error()
-	}
-	return ve.message
+func (e *ErrImageTagNotFound) Error() string {
+	return e.err.Error()
 }
 
-func (e *VerificationError) Unwrap() error { return e.err }
+type ErrNoSignaturesFound struct {
+	err error
+}
+
+func (e *ErrNoSignaturesFound) Error() string {
+	return e.err.Error()
+}
+
+type ErrNoMatchingAttestations struct {
+	err error
+}
+
+func (e *ErrNoMatchingAttestations) Error() string {
+	return e.err.Error()
+}
+
+func ThrowError(err interface{ error }) error {
+	return err
+}
