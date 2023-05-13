@@ -21,8 +21,6 @@ Cosign supports:
 * Container Signing, Verification and Storage in an OCI registry.
 * Bring-your-own PKI
 
-![intro](images/intro.gif)
-
 ## Info
 
 `Cosign` is developed as part of the [`sigstore`](https://sigstore.dev) project.
@@ -192,44 +190,6 @@ Pushing signature to: ttl.sh/my-artifact-f42c22e0
 
 As usual, make sure to reference any images you sign by their digest to make sure you don't sign the wrong thing!
 
-#### sget
-
-We also include the `sget` command for safer, automatic verification of signatures and integration with our binary transparency log, Rekor.
-
-To install `sget`, if you have Go 1.16+, you can directly run:
-
-    $ go install github.com/sigstore/cosign/v2/cmd/sget@latest
-
-and the resulting binary will be placed at `$GOPATH/bin/sget` (or `$GOBIN/sget`, if set).
-
-Just like `curl`, `sget` can be used to fetch artifacts by digest using the OCI URL.
-Digest verification is automatic:
-
-```shell
-$ sget us.gcr.io/dlorenc-vmtest2/readme@sha256:4aa3054270f7a70b4528f2064ee90961788e1e1518703592ae4463de3b889dec > artifact
-```
-
-You can also use `sget` to fetch contents by tag.
-Fetching contents without verifying them is dangerous, so we require the artifact be signed in this case:
-
-```shell
-$ sget gcr.io/dlorenc-vmtest2/artifact
-error: public key must be specified when fetching by tag, you must fetch by digest or supply a public key
-
-$ sget --key cosign.pub us.gcr.io/dlorenc-vmtest2/readme > foo
-
-Verification for us.gcr.io/dlorenc-vmtest2/readme --
-The following checks were performed on each of these signatures:
-  - The cosign claims were validated
-  - Existence of the claims in the transparency log was verified offline
-  - The signatures were verified against the specified public key
-  - The code-signing certificate was verified using trusted certificate authority certificates
-```
-
-The signature, claims and transparency log proofs are all verified automatically by sget as part of the download.
-
-`curl | bash` isn't a great idea, but `sget | bash` is less-bad.
-
 #### Tekton Bundles
 
 [Tekton](https://tekton.dev) bundles can be uploaded and managed within an OCI registry.
@@ -344,6 +304,7 @@ Today, `cosign` has been tested and works against the following registries:
 * Elastic Container Registry
 * IBM Cloud Container Registry
 * Cloudsmith Container Registry
+* The CNCF zot Registry
 
 We aim for wide registry support. To `sign` images in registries which do not yet fully support [OCI media types](https://github.com/sigstore/cosign/blob/main/SPEC.md#object-types), one may need to use `COSIGN_DOCKER_MEDIA_TYPES` to fall back to legacy equivalents. For example:
 

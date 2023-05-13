@@ -26,14 +26,14 @@ jobs:
   check-signature:
     runs-on: ubuntu-latest
     container:
-      image: gcr.io/projectsigstore/cosign:v2.0.0@sha256:728944a9542a7235b4358c4ab2bcea855840e9d4b9594febca5c2207f5da7f38
+      image: gcr.io/projectsigstore/cosign:v2.0.2@sha256:a95d7c4ab27e48aaf89253e0703014709129f010578be809b6c95ccee908fa1b
 
     steps:
       - name: Check Signature
         run: |
-          cosign verify ghcr.io/gythialy/golang-cross:v1.20.3-0@sha256:938ca7f93d99cddfb20a9530922ae6172c6cc84c5a26ef113af5e02d1a767ada \
+          cosign verify ghcr.io/gythialy/golang-cross:v1.20.4-0@sha256:c9f009c018d406f08e6e2e601eb6945f66a003112a220dca039621078e565188 \
           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-          --certificate-identity "https://github.com/gythialy/golang-cross/.github/workflows/release-golang-cross.yml@refs/tags/v1.20.3-0"
+          --certificate-identity "https://github.com/gythialy/golang-cross/.github/workflows/release-golang-cross.yml@refs/tags/v1.20.4-0"
         env:
           TUF_ROOT: /tmp
 
@@ -43,12 +43,12 @@ jobs:
       - check-signature
 
     container:
-      image: ghcr.io/gythialy/golang-cross:v1.20.3-0@sha256:938ca7f93d99cddfb20a9530922ae6172c6cc84c5a26ef113af5e02d1a767ada
+      image: ghcr.io/gythialy/golang-cross:v1.20.4-0@sha256:c9f009c018d406f08e6e2e601eb6945f66a003112a220dca039621078e565188
 
     permissions: {}
 
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
       # Error: fatal: detected dubious ownership in repository at '/__w/cosign/cosign'
       #      To add an exception for this directory, call:
@@ -70,4 +70,3 @@ jobs:
       - name: check binaries
         run: |
           ./dist/cosign-linux-amd64 version
-          ./dist/sget-linux-amd64 version

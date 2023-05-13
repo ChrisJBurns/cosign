@@ -38,6 +38,10 @@ cosign verify [flags]
   # verify image with local certificate and certificate chain
   cosign verify --cert cosign.crt --cert-chain chain.crt <IMAGE>
 
+  # verify image using keyless verification with the given certificate
+  # chain and identity parameters, without Fulcio roots (for BYO PKI):
+  cosign verify --cert-chain chain.crt --certificate-oidc-issuer https://issuer.example.com --certificate-identity foo@example.com <IMAGE>
+
   # verify image with public key provided by URL
   cosign verify --key https://host.for/[FILE] <IMAGE>
 
@@ -89,7 +93,7 @@ cosign verify [flags]
       --offline                                                                                  only allow offline verification
   -o, --output string                                                                            output format for the signing image information (json|text) (default "json")
       --payload string                                                                           payload path or remote URL
-      --rekor-url string                                                                         [EXPERIMENTAL] address of rekor STL server (default "https://rekor.sigstore.dev")
+      --rekor-url string                                                                         address of rekor STL server (default "https://rekor.sigstore.dev")
       --sct string                                                                               path to a detached Signed Certificate Timestamp, formatted as a RFC6962 AddChainResponse struct. If a certificate contains an SCT, verification will check both the detached and embedded SCTs.
       --signature string                                                                         signature content or path or remote URL
       --signature-digest-algorithm string                                                        digest algorithm to use when processing a signature (sha224|sha256|sha384|sha512) (default "sha256")
