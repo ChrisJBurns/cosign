@@ -14,10 +14,22 @@
 
 package cosign
 
-// VerificationFailure is temporary until the error types for the case
-// where this has been thrown has been defined.
+// VerificationFailure is the type of Go error that is used by cosign to surface
+// errors actually related to verification (vs. transient, misconfiguration,
+// transport, or authentication related issues).
+// It is now marked as deprecated and will be removed in favour of defined
+// error types with use of the ThrowError function.
 type VerificationFailure struct {
 	err error
+}
+
+// ThrowError returns the error type that is passed. It acts as a
+// single consistent way of throwing errors from the pkg level.
+// As long as the error type is defined before hand, this can be
+// used to throw errors up to the calling code without discrimination
+// around the error type.
+func ThrowError(err interface{ error }) error {
+	return err
 }
 
 func (e *VerificationFailure) Error() string {
@@ -54,8 +66,4 @@ type ErrNoMatchingAttestations struct {
 
 func (e *ErrNoMatchingAttestations) Error() string {
 	return e.err.Error()
-}
-
-func ThrowError(err interface{ error }) error {
-	return err
 }

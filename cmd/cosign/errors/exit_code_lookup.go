@@ -22,22 +22,34 @@ import (
 )
 
 func LookupExitCodeForError(err interface{ error }) int {
-	var errNoMatchingSignatures *cosignError.ErrNoMatchingSignatures
-	if errors.As(err, &errNoMatchingSignatures) {
+	if noMatchingSignatureError(err) {
 		return NoMatchingSignature
 	}
 
-	var errImageTagNotFound *cosignError.ErrImageTagNotFound
-	if errors.As(err, &errImageTagNotFound) {
+	if imageTagNotFoundError(err) {
 		return NonExistentTag
 	}
 
-	var errNoSignaturesFound *cosignError.ErrNoSignaturesFound
-	if errors.As(err, &errNoSignaturesFound) {
+	if noSignaturesFoundError(err) {
 		return ImageWithoutSignature
 	}
 
 	// we want to return exit code = `1` at this point because there is
-	// no valid exit code found for the error type passed.
+	// no valid exit code found for the error type passed, so we default to 1.
 	return 1
+}
+
+func noMatchingSignatureError(err interface{ error }) bool {
+	var errNoMatchingSignatures *cosignError.ErrNoMatchingSignatures
+	return errors.As(err, &errNoMatchingSignatures)
+}
+
+func imageTagNotFoundError(err interface{ error }) bool {
+	var errImageTagNotFound *cosignError.ErrImageTagNotFound
+	return errors.As(err, &errImageTagNotFound)
+}
+
+func noSignaturesFoundError(err interface{ error }) bool {
+	var errNoSignaturesFound *cosignError.ErrNoSignaturesFound
+	return errors.As(err, &errNoSignaturesFound)
 }

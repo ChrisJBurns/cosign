@@ -18,6 +18,8 @@ package errors
 import (
 	"errors"
 	"testing"
+
+	pkgError "github.com/sigstore/cosign/v2/pkg/cosign"
 )
 
 func TestWrapWithGenericCosignError(t *testing.T) {
@@ -31,5 +33,20 @@ func TestWrapWithGenericCosignError(t *testing.T) {
 			return
 		}
 		t.Fatalf("generic cosign error unsuccessfully returned")
+	}
+}
+
+func TestWrapWithNonGenericCosignError(t *testing.T) {
+	// We test with any error that is not a generic CosignError.
+	// In this case, ErrNoMatchingSignatures
+	ve := &pkgError.ErrNoMatchingSignatures{}
+	err := WrapError(ve)
+
+	var cosignError *CosignError
+	if errors.As(err, &cosignError) {
+		if cosignError.ExitCode() != NoMatchingSignature {
+			t.Fatalf("verification error unsuccessfully wrapped")
+		}
+		t.Logf("verification error successfully wrapped and exit code returned")
 	}
 }
